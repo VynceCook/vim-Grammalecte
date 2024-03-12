@@ -154,6 +154,8 @@ function grammalecte#Check(line1, line2) "{{{1
   setlocal nospell
   syn clear
 
+  call append(line('$'), 'COUCOU' . l:errors_json)
+
   call matchadd('GrammalecteCmd', '\%1l')
   call matchadd('GrammalecteLabel', '^\(Message\|Contexte\|Correction\|Corrections\|URL\) :')
   call matchadd('GrammalecteErrorCount', '^Erreur :\s\+\d\+/\d\+')
@@ -166,11 +168,35 @@ function grammalecte#Check(line1, line2) "{{{1
     let l:error_count = 0
     for l:errors_in_paragraph in l:errors
       let l:error_count += len(l:errors_in_paragraph['lGrammarErrors'])
+      let l:error_count += len(l:errors_in_paragraph['lSpellingErrors'])
     endfor
 
     " Format JSON output in a human readable way.
     let l:error_num = 1
     for l:errors_in_paragraph in l:errors
+      let l:spelling_errors_in_paragraph  = l:errors_in_paragraph['lSpellingErrors']
+      " Loop on spelling errors in paragraph, ordered by their starting lines and starting columns.
+      for l:spelling_error in sort(l:spelling_errors_in_paragraph, "s:CompareErrors")
+        let l:line_num_start = l:spelling_error['nStartY'] + a:line1 - 1
+        let l:line_num_end   = l:spelling_error['nEndY']   + a:line1 - 1
+        let l:col_num_start  = l:spelling_error['nStartX'] + 1
+        let l:col_num_end    = l:spelling_error['nEndX']   + 1
+        let l:value          = l:spelling_error['sValue']
+        call append(line('$'), 'Erreur :      '
+              \ . l:error_num . '/' . l:error_count . ' '
+              \ . l:spelling_error['sType'] . ' @ '
+              \ . l:line_num_start . 'L '
+              \ . l:col_num_start  . 'C')
+        call append(line('$'), 'Message :     mot inconnu')
+        call append(line('$'), 'Contexte :    ' . l:value)
+        let l:re = '^\%' . line('$') . 'l'
+              \ . '.\{14}'
+              \ . '\zs.\{' . (strchars(l:value)) . '}'
+        call matchadd('GrammalecteGrammarError', l:re)
+        call append('$', '')
+        let l:error_num = l:error_num + 1
+      endfor
+
       let l:grammar_errors_in_paragraph  = l:errors_in_paragraph['lGrammarErrors']
       " Loop on errors in paragraph, ordered by their starting lines and starting columns.
       for l:grammar_error in sort(l:grammar_errors_in_paragraph, "s:CompareErrors")
