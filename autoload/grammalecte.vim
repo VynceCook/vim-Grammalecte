@@ -1,7 +1,7 @@
 " Grammalecte: French Grammar checker.
 " Maintainer:  Dominique Pellé <dominique.pelle@gmail.com>
 " Screenshots: http://dominique.pelle.free.fr/pic/GrammalecteVimPlugin.png
-" Last Change: 2020/10/30
+" Last Change: 2024/03/12
 "
 " Set up configuration.
 " Returns 0 if success, < 0 in case of error.
@@ -153,8 +153,6 @@ function grammalecte#Check(line1, line2) "{{{1
   set bt=nofile
   setlocal nospell
   syn clear
-
-  call append(line('$'), 'COUCOU' . l:errors_json)
 
   call matchadd('GrammalecteCmd', '\%1l')
   call matchadd('GrammalecteLabel', '^\(Message\|Contexte\|Correction\|Corrections\|URL\) :')
